@@ -11,35 +11,30 @@ def scrape_all_products_sync():
     page.goto("https://web-scraping.dev/products")
 
     while True:
-        page.wait_for_selector('div[class="products"]')
-        cards = page.query_selector_all('div[class="row product"]')
+        page.wait_for_selector('.products')
+        cards = page.query_selector_all('.product')
 
         for card in cards:
             # Thumbnail image
-            thumbnail = card.query_selector('div[class="col-2 thumbnail"]')
-            img = thumbnail.query_selector('img') if thumbnail else None
+            thumbnail = card.query_selector('.thumbnail>img')
 
             # Description title and text
-            description = card.query_selector('div[class="col-8 description"]')
-            title = description.query_selector('h3') if description else None
-            text = description.query_selector('div[class="short-description"]') if description else None
+            title = card.query_selector('.description>h3')
+            text = card.query_selector('.description>.short-description')
 
             # Price
-            price_wrap = card.query_selector('div[class="col-2 price-wrap"]')
-            price = price_wrap.query_selector('div[class="price"]') if price_wrap else None
+            price = card.query_selector('.price-wrap>.price')
             
             all_products.append({
-                'thumbnail': img.get_attribute('src') if img else '',
+                'thumbnail': thumbnail.get_attribute('src') if thumbnail else '',
                 'title': title.inner_text() if title else '',
-                'description': text.inner_text() if text else '',
+                'text': text.inner_text() if text else '',
                 'price': price.inner_text() if price else ''
             })
 
-        paging = page.query_selector('div[class="paging"]')
-        next_page = (paging.query_selector_all('a'))[-1] if paging else None
-        if(next_page and next_page.get_attribute('href')):
+        next_page = page.query_selector('.paging>a:last-child') # Next page is the last button
+        if(next_page and next_page.get_attribute('href')): # Check if there is a link to the next page
             next_page.click()
-            page.wait_for_load_state('networkidle')  # or 'load'
         else:
             break
 
